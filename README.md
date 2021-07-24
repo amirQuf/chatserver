@@ -3,8 +3,8 @@ a client chat server that is use **tcp socket**  to  connect  to each others and
 
 
 ##How to run?
-- **frist step** : run `server.py`
+- **frist step** : run `server.py`.<br>
       ```Python3 server.py```
-- **second step** :run `clien.py`
-      ```Python3 client.py```
+- **second step** :run `clien.py`.<br>
+      ```Python3 client.py```<br>
 creating viritual enviorment is not obligatory.
