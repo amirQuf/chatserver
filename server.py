@@ -4,8 +4,8 @@ from socket import *
 
 clients = {}  # client information
 users = {}  # client sockets for broadcast
-threads = []
-usernames = []
+threads = [] # list of threads
+usernames = [] # list of usernames
 
 
 # broadcast function
@@ -129,3 +129,9 @@ while 1:
     t.start()
 # closing the sever socket
 server_socket.close()
+
+
+
+
+#end  of file 
+
