@@ -60,4 +60,4 @@ while message != "Bye":
             print("try again")
     else:
         # sending message
-        client_socket.send(message)
+        client_socket.send(message.encode())
