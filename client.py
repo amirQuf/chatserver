@@ -6,14 +6,14 @@ from socket import *
 from pip._vendor.distlib.compat import raw_input
 
 # this is server port and  server address
-server_name = "127.0.0.1"
-server_port = 21000
+SERVER_NAME = "127.0.0.1"
+SERVER_PORT = 21000
 print("connecting to server")
 # creating a tcp socket
 client_socket = socket(AF_INET, SOCK_STREAM)
 # connecting to defined server
-client_socket.connect((server_name, server_port))
-print(f'connected to {server_name}:{server_port}')
+client_socket.connect((SERVER_NAME, SERVER_PORT))
+print(f'connected to {SERVER_NAME}:{SERVER_PORT}')
 # print a defined format to users
 print('''1.Hello <user_name>\n2.Please send the list of attendees.\n3.Public message, length=<message_len>:
 <message_body>\n4.Private message, length=<message_len> to <user_name1>,<user_name2>,<user_name3>,<user_name4>:
