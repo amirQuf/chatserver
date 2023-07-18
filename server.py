@@ -106,15 +106,15 @@ def client_send(clientSocket, addr):
         # print("done")
 
 
-server_name = ""  # server name(local host)
-server_port = 21000  # server port
+SERVER_NAME = ""  # server name(local host)
+SERVER_PORT = 21000  # server port
 
 # creating and binding Tcp socket for server
 server_socket = socket(AF_INET, SOCK_STREAM)
-server_socket.bind((server_name, server_port))
+server_socket.bind((SERVER_NAME, SERVER_PORT))
 print('Server started!')
 print('Waiting for clients...')
-print('Got connection from', server_name, server_port)
+print('Got connection from', SERVER_NAME, SERVER_PORT)
 # listening  to  users
 server_socket.listen(100)
 
