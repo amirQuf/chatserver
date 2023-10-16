@@ -9,9 +9,9 @@ we can send __private message__  or __public message__.
 
 ## How to run?
 - **frist step** : run `server.py`.<br>
-      ```Python3 server.py```
+  ```Python3 server.py```
 - **second step** :run `clien.py`.<br>
-      ```Python3 client.py```<br>
+    ```Python3 client.py```
 creating viritual enviorment is not obligatory.
 
 ## How to send message:
