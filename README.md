@@ -32,8 +32,3 @@ creating virtual environment is not obligatory.
 4.Private message, length=`<message_len>` to `<user_name1>`,`<user_name2>`,`<user_name3>`,`<user_name4>`:
 `<message_body>`<br>
 5.Bye.
-
-#### ToDO:
-
-- [ ] cleaning codes
-- [ ] use log
