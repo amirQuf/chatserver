@@ -1,22 +1,26 @@
 import re
 import threading
 from socket import *
+from typing import List
 
-clients = {}  # client information
-users = {}  # client sockets for broadcast
+
+@dataclass
+class User:
+    username: str
+    addr: str
+
+
+users: List[User]
 threads = []  # list of threads
-usernames = []  # list of usernames
-
-
-# broadcast function
-
-
-# this function is for receiving message and answer to them
+clients = {}  # clients[str]= socket
 
 
 class ServerException(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
+
+from dataclasses import dataclass
 
 
 class Server:
@@ -37,111 +41,92 @@ class Server:
     def listen_to_clients(self):
         """listening to clients"""
         while 1:
-            # a client connect  to  server and we should accept them for the rest
             connection_socket, addr = self._server_socket.accept()
-            # saving connection Socket
             clients[connection_socket.fileno()] = connection_socket
-            # creating thread for answering to multiple clients
-            t = threading.Thread(target=client_send, args=(connection_socket, addr))
-            # start the thread
+
+            t = threading.Thread(target=self.reply, args=(connection_socket, addr))
+
             t.start()
-            # closing the sever socket
+
             self._server_socket.close()
 
-        def broadcast(self, m: str):
+        def add_user(user: User) -> bool:
+            if user not in users:
+                return False
+            users.append(user)
+            return True
+
+        def broadcast(self, m: str) -> bool:
             for client in clients.values():
                 client.send(m)
+            return True
+
+        def greet(self, username: str, clientSocket):
+            welcome_str = b"Hi " + username + b", welcome to the chat room."
+            print(welcome_str)
+            clientSocket.send(welcome_str)
+
+        def get_all_users(self):
+            for user in users:
+                response = response + user + b","
+            print(response)
+            return response
+
+        def send_private_msg(self, msg, receivers: str):
+            for user in users:
+                if user.username in receivers:
+                    clients[user.username].send(msg)
 
         def reply(self, clientSocket, addr):
-            request = b""
-            while request != b"Bye.":
-                # receiving messages from clients
+            while True:
                 request = clientSocket.recv(1024)
-                # decode message
                 request.decode()
-                if request[0:5] == b"Hello":
-                    # print('hello')
-                    # finding username
-                    username = request[6:]
-                    # checking username  to other usernames
-                    if not username in users:
-                        usernames.append(username)
-                        # welcome message
-                        welcome_str = b"Hi " + username + b", welcome to the chat room."
-                        print(welcome_str)
-                        # send welcome message to user
-                        clientSocket.send(welcome_str)
-                        # send notification message for other users
-                        notification_str = username + b" join the chat room."
+                response = {}
+                code = request["header"]["code"]
+                if code == 1:
+                    user = User(username=request["body"]["username"], addr=addr)
+                    if add_user(user):
+                        self.greet(user.username, clientSocket)
+                        notification_str = user.username + b" join the chat room."
+                        broadcast(notification_str)
                         print(notification_str)
-                        self.broadcast(notification_str)
-                        # save socket for sending broadcast and Private message
-                        users[username] = clientSocket
+                        clients[user.username] = clientSocket
                     else:
-                        # sending error message to user because username was taken
-                        er_str = b"""username  is exist please try again!"""
-                        print(er_str)
-                        clientSocket.send(er_str)
-                elif request == b"Bye":
-                    # print('bye')
-                    # sending a message  for other users  that this user left chat room
-                    msg = username + b" left the chat room."
+                        er_str = b"username  is exist please try again!"
+                        response["type"] = "error"
+                        response["message"] = er_str
+                        clientSocket.send(response)
+                elif code == 2:
+                    response_str = (
+                        b"Here is the list of attendees:\n" + self.get_all_users()
+                    )
+
+                    clientSocket.send(response)
+                elif code == 3:
+                    msg = request["body"]["message"]
+                    self.broadcast(msg)
+                elif code == 4:
+                    pr_msg = b"""Private message from """ + User.username
+                    msg = request["body"]["message"]
+                    pr_response = str(pr_msg) + "\r\n" + msg
+                    pr_response_bytes = pr_response.encode()
+                    receivers = request["body"]["receivers"]
+                    self.send_private_msg(pr_response_bytes, receivers)
+                elif code == 5:
+                    msg = user.username + b" left the chat room."
                     print(msg)
                     self.broadcast(msg)
-                    # remove username from list
-                    usernames.remove(username)
-                    break
-                elif request == b"Please send the list of attendees.":
-                    # sending list of attendees
-                    response = b"Here is the list of attendees:\n"
-                    # iterate all usernames and make the string and send to user
-                    for user in usernames:
-                        response = response + user + b","
-                    print(response[:-1])
-                    clientSocket.send(response)
-                elif request[0:6] == b"Public":
-                    # getting information about public message
-                    public_str = request[:13] + b" from " + username + request[13:]
-                    # finding and return length in message with regex and concat it to int
-                    length = int(re.findall(r"\d+", str(request))[0])
-                    # receiving  message body
-                    public_msg = clientSocket.recv(length)
-                    # print the message
-                    print(username, ":", public_msg.decode())
-                    # creating message response  to broadcast
-                    public_response = str(public_str) + "\r\n" + str(public_msg)
-                    print(username, ":", public_response)
-                    broadcast(public_response.encode())
-                elif request[0:7] == b"Private":
-                    # print('private')
-                    pr_msg = b"""Private message from """ + username
+                    user.remove(user)
 
-                    print(pr_msg)
-                    # getting information about public message
-                    # finding length with regex and concat to int
-                    length = int(re.findall(r"\d+", str(request))[0])
-                    # receive message body and decode it
-                    private_msg = clientSocket.recv(length).decode()
-                    pr_response = str(pr_msg) + "\r\n" + private_msg
-                    # encode message for sending
-                    pr_response_bytes = pr_response.encode()
-                    # iterate users
-                    for u in users:
-                        # finding names in information message
-                        if u in request:
-                            # send them message
-                            users[u].send(pr_response_bytes)
                 else:
-                    # SENDING AND PRINTING ERROR FOR UNAVAILABLE MESSAGE
-                    er_strr = "undefined command"
-                    print(er_strr)
-                    clientSocket.send(er_strr.encode())
-                # print("done")
+                    error = "undefined command"
+                    print(error)
+                    clientSocket.send(error.encode())
 
 
 if __name__ == "__main__":
-    SERVER_NAME = ""  # server name(local host)
-    SERVER_PORT = 21000  # server port
+    SERVER_NAME = ""
+    SERVER_PORT = 21000
 
     server = Server(SERVER_NAME, SERVER_PORT)
     try:

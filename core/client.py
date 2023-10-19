@@ -2,6 +2,8 @@ import threading
 from datetime import datetime
 from socket import *
 
+sent_msg = []
+
 
 class Client:
     def __init__(self, server_name, server_port):
@@ -19,7 +21,7 @@ class Client:
     def log(self, message: str):
         now = datetime.now()
         log = message + "\n\t" + now.strftime("%H:%M:%S")
-        # send_msg.append(log)
+        sent_msg.append(log)
 
     def receive_and_print(self):
         for message in iter(lambda: self._client_socket.recv(1024).decode(), ""):
@@ -53,31 +55,36 @@ if __name__ == "__main__":
     # start thread
     background_thread.start()
     while 1:
-        type = int(input())
+        code = int(input())
         header = {
-            "type": type,
+            "code": code,
         }
         body = {}
-        if type == 1:
+        if code == 1:
             username = input("username:")
             message = f"Hello {username}"
             body["username"] = username
 
-        elif type == 2:
+        elif code == 2:
             message = "Please send the list of attendees."
 
-        elif type == 3:
-            message_body = input("message:")
-
-        elif type == 4:
-            message_body = input("message:")
+        elif code == 3:
+            message = input("message:")
+            body["type"] = "Public"
+        elif code == 4:
+            message = input("message:")
             receivers = input("receivers:")
-            message = f"Private message, length={len(message_body)} to <user_name1>,<user_name2>,<user_name3>,<user_name4>:{message_body}"
-        else:
+            body["type"] = "Private"
+            # encrypt message
+
+        elif code == 5:
             # Bye
             message = "Bye."
             client.disconnect()
+        else:
+            print("Invalid code")
 
         body["message"] = message
+        header["receivers"] = receivers
         payload = {"header": header, "body": body}
         client.send(payload)
