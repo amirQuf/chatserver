@@ -4,6 +4,11 @@ A client chat server that is using **tcp socket** to connect to **server** and s
 
 we can send **private message** or **public message**.
 
+## fitures:
+- public message
+- private message
+- list  of atendees
+
 ## Libraries:
 
 - Socket

@@ -1,2 +1,5 @@
-- [ ] Readme.md
-- [ ] script
+- [ ] write documetion for Readme.md
+- [ ] script for running
+- [ ] write test with pytest for it
+- [ ] Dockerfile
+- [ ] loging
