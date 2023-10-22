@@ -15,8 +15,8 @@ class Client:
         self._client_socket.connect((SERVER_NAME, SERVER_PORT))
         print(f"connected to {SERVER_NAME}:{SERVER_PORT}")
 
-    def send(self, message: str, type: int):
-        self._client_socket.send(message.encode())
+    def send(self, message: str):
+        self._client_socket.send(str(message).encode())
 
     def log(self, message: str):
         now = datetime.now()
@@ -38,10 +38,8 @@ if __name__ == "__main__":
     SERVER_PORT = 21000
 
     client = Client(SERVER_NAME, SERVER_PORT)
-    try:
-        client.connecting_to_server()
-    except:
-        raise Exception(detail="server is not ready.")
+
+    client.connecting_to_server()
 
     # message protocol
     print(
@@ -55,11 +53,11 @@ if __name__ == "__main__":
     # start thread
     background_thread.start()
     while 1:
-        code = int(input())
-        header = {
+        code = int(input("code:"))
+
+        body = {
             "code": code,
         }
-        body = {}
         if code == 1:
             username = input("username:")
             message = f"Hello {username}"
@@ -74,6 +72,7 @@ if __name__ == "__main__":
         elif code == 4:
             message = input("message:")
             receivers = input("receivers:")
+            body["receivers"] = receivers
             body["type"] = "Private"
             # encrypt message
 
@@ -85,6 +84,5 @@ if __name__ == "__main__":
             print("Invalid code")
 
         body["message"] = message
-        header["receivers"] = receivers
-        payload = {"header": header, "body": body}
-        client.send(payload)
+
+        client.send(body)
