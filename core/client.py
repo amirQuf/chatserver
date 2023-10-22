@@ -53,7 +53,8 @@ if __name__ == "__main__":
     # start thread
     background_thread.start()
     while 1:
-        code = int(input("code:"))
+        print("Instruction code:")
+        code = int(input())
 
         body = {
             "code": code,
