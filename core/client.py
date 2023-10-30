@@ -3,43 +3,73 @@ from datetime import datetime
 from socket import *
 from dataclasses import dataclass
 
-sent_msg = []
-inbox = []
-logs = []
 
 
 @dataclass
 class Message:
+    """Represents a message with a message body and timestamp."""
     message: str
     date: datetime
 
 
 class Client:
     def __init__(self, server_name, server_port):
+        """
+        Initialize a Client instance.
+
+        Args:
+            server_name (str): The server's hostname or IP address.
+            server_port (int): The port to connect to on the server.
+        """
         self.server_name = server_name
         self.server_port = server_port
+        self.sent_msg = []
+        self.inbox = []
+        self.logs = []
+
 
     def connecting_to_server(self):
+        """
+        Connect to the server.
+        """
         self._client_socket = socket(AF_INET, SOCK_STREAM)
-        self._client_socket.connect((SERVER_NAME, SERVER_PORT))
-        print(f"connected to {SERVER_NAME}:{SERVER_PORT}")
+        self._client_socket.connect((self.server_name, self.server_port))
+        print(f"connected to {self.server_name}:{self.server_port}")
 
     def send(self, message: str):
+        """
+        Send a message to the server.
+
+        Args:
+            message (str): The message to send to the server.
+        """
         self._client_socket.send(str(message).encode())
 
     def log(self, message: str):
+        """
+        Log a message with a timestamp.
+
+        Args:
+            message (str): The message to log.
+        """
         now = datetime.now()
         log = message + "\n\t"
         message = Message(message=log, date=now)
-        logs.append(message)
+        self.logs.append(message)
 
     def receive_and_print(self):
+        """
+        Receive and print messages from the server.
+        """
         for message in iter(lambda: self._client_socket.recv(1024).decode(), ""):
-            inbox.append(message)
+            self.inbox.append(message)
             print("SERVER>>", message)
             print("")
 
     def disconnect(self):
+        """
+        Disconnect from the server.
+        """
         self._client_socket.close()
 
 
@@ -94,5 +124,5 @@ if __name__ == "__main__":
             print("Invalid code")
 
         body["message"] = message
-        sent_msg.append(message)
+        client.sent_msg.append(message)
         client.send(body)

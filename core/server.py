@@ -6,6 +6,7 @@ import ast
 
 @dataclass
 class User:
+    """Represents a user in the chat room."""
     username: str
     addr: str
 
@@ -16,6 +17,7 @@ clients = {}  # clients[str]= socket
 
 
 class ServerException(Exception):
+    """Custom exception class for server-related exceptions."""
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
@@ -25,22 +27,29 @@ from dataclasses import dataclass
 
 class Server:
     def __init__(self, server_name: str, server_port: int) -> None:
+        """
+        Initialize a Server instance.
+
+        Args:
+            server_name (str): The server's hostname or IP address.
+            server_port (int): The port on which the server listens for connections.
+        """
         self.server_name = server_name
         self.server_port = server_port
         self._server_socket = None
 
     def binding_port(self):
-        """binding port for server to listen to clients"""
+        """Bind the server to a specific host and port for listening."""
         self._server_socket = socket(AF_INET, SOCK_STREAM)
         self._server_socket.bind((self.server_name, self.server_port))
 
         print("Server started!")
         print("Waiting for clients...")
-        print("Got connection from", SERVER_NAME, SERVER_PORT)
+        print("Got connection from", self.server_name, self.server_port)
         self._server_socket.listen(100)
 
     def listen_to_clients(self):
-        """listening to clients"""
+        """Listen for incoming client connections and create threads to handle them."""
         while 1:
             connection_socket, addr = self._server_socket.accept()
             clients[connection_socket.fileno()] = connection_socket
@@ -52,32 +61,60 @@ class Server:
             self._server_socket.close()
 
     def accept(self):
+        """Accept a client connection and return the client socket and address."""
         connection_socket, addr = self._server_socket.accept()
         return connection_socket, addr
 
     def add_user(self, user: User) -> bool:
+        """
+        Add a user to the list of users.
+
+        Args:
+            user (User): The user object to add.
+
+        Returns:
+            bool: True if the user is successfully added, False if the user already exists.
+        """
         if user in users:
             return False
         users.append(user)
         return True
 
     def broadcast(self, m: str) -> bool:
+        """
+        Broadcast a message to all connected clients.
+
+        Args:
+            m (str): The message to broadcast.
+
+        Returns:
+            bool: True if the message is successfully broadcasted.
+        """
         for client in clients.values():
             client.send(m)
         return True
 
     def greet(self, username: str, clientSocket):
+        """Send a welcome message to a client."""
         welcome_str = "Hi " + username + ", welcome to the chat room."
         print(welcome_str)
         clientSocket.send(welcome_str.encode())
 
     def get_all_users(self):
+        """Get a list of all connected users."""
         response = ""
         for user in users:
             response += user.username + ","
         return response
 
     def send_private_msg(self, msg, receivers: str):
+        """
+        Send a private message to specific users.
+
+        Args:
+            msg (str): The private message.
+            receivers (str): A comma-separated list of usernames who should receive the message.
+        """
         for user in users:
             if user.username in receivers:
                 clients[user.username].send(msg)
