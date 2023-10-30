@@ -1,8 +1,17 @@
 import threading
 from datetime import datetime
 from socket import *
+from dataclasses import dataclass
 
 sent_msg = []
+inbox = []
+logs = []
+
+
+@dataclass
+class Message:
+    message: str
+    date: datetime
 
 
 class Client:
@@ -20,13 +29,14 @@ class Client:
 
     def log(self, message: str):
         now = datetime.now()
-        log = message + "\n\t" + now.strftime("%H:%M:%S")
-        sent_msg.append(log)
+        log = message + "\n\t"
+        message = Message(message=log, date=now)
+        logs.append(message)
 
     def receive_and_print(self):
         for message in iter(lambda: self._client_socket.recv(1024).decode(), ""):
-            # inbox.append(message)
-            print(":", message)
+            inbox.append(message)
+            print("SERVER>>", message)
             print("")
 
     def disconnect(self):
@@ -35,18 +45,17 @@ class Client:
 
 if __name__ == "__main__":
     SERVER_NAME = "127.0.0.1"
-    SERVER_PORT = 21000
+    SERVER_PORT = 21001
 
+    help = """1.Hello <user_name>\n2.Please send the list of attendees.\n3.Public message, length=<message_len>:
+    <message_body>\n4.Private message, length=<message_len> to <user_name1>,<user_name2>,<user_name3>,<user_name4>:
+    <message_body>\n5.Bye."""
     client = Client(SERVER_NAME, SERVER_PORT)
 
     client.connecting_to_server()
 
     # message protocol
-    print(
-        """1.Hello <user_name>\n2.Please send the list of attendees.\n3.Public message, length=<message_len>:
-    <message_body>\n4.Private message, length=<message_len> to <user_name1>,<user_name2>,<user_name3>,<user_name4>:
-    <message_body>\n5.Bye."""
-    )
+    print(help)
 
     background_thread = threading.Thread(target=client.receive_and_print)
     background_thread.daemon = True
@@ -85,5 +94,5 @@ if __name__ == "__main__":
             print("Invalid code")
 
         body["message"] = message
-
+        sent_msg.append(message)
         client.send(body)

@@ -110,8 +110,8 @@ class Server:
                 msg = request_dict["message"]
                 self.broadcast(msg.encode())
             elif code == 4:
-                pr_msg = "Private message from " + User.username
-                msg = request["message"]
+                pr_msg = "Private message from " + user.username
+                msg = request_dict["message"]
                 pr_response = str(pr_msg) + "\r\n" + msg
                 pr_response_bytes = pr_response.encode()
                 receivers = request_dict["receivers"]
@@ -130,11 +130,23 @@ class Server:
 
 if __name__ == "__main__":
     SERVER_NAME = ""
-    SERVER_PORT = 21000
+    SERVER_PORT = 21001
 
     server = Server(SERVER_NAME, SERVER_PORT)
+
     try:
         server.binding_port()
-    except ServerException:
-        raise ServerException(f"{SERVER_NAME}:{SERVER_PORT} Port is Busy")
-    server.listen_to_clients()
+    except ServerException as e:
+        raise ServerException(f"{SERVER_NAME}:{SERVER_PORT} :{str(e)}")
+
+    while 1:
+        connection_socket, addr = server._server_socket.accept()
+        clients[connection_socket.fileno()] = connection_socket
+
+        t = threading.Thread(target=server.reply, args=(connection_socket, addr))
+
+        t.start()
+
+    server._server_socket.close()
+
+    # server.listen_to_clients()
